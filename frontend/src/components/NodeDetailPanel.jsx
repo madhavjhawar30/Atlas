@@ -30,10 +30,23 @@ export default function NodeDetailPanel() {
         
         {/* Image Info */}
         <div className="p-4 space-y-3">
-          {/* Thumbnail placeholder */}
-          <div className="bg-neural-bg rounded-lg p-8 text-center">
-            <div className="text-5xl mb-2">🖼️</div>
-            <p className="text-sm text-gray-400">{image.filename}</p>
+          {/* Actual Image */}
+          <div className="bg-neural-bg rounded-lg overflow-hidden">
+            <img 
+              src={`http://localhost:8000/images/${selectedNode}`}
+              alt={image.filename}
+              className="w-full h-auto object-contain max-h-64"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.style.display = 'none';
+                e.target.nextSibling.style.display = 'flex';
+              }}
+            />
+            <div className="hidden flex-col items-center justify-center p-8">
+              <div className="text-5xl mb-2">🖼️</div>
+              <p className="text-sm text-gray-400">Image not available</p>
+            </div>
+            <p className="text-sm text-gray-400 text-center py-2 border-t border-gray-700">{image.filename}</p>
           </div>
           
           {/* Metadata */}
@@ -91,8 +104,20 @@ export default function NodeDetailPanel() {
                   "
                 >
                   <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 bg-neural-accent/20 rounded flex items-center justify-center text-lg">
-                      🖼️
+                    <div className="w-8 h-8 bg-neural-accent/20 rounded overflow-hidden flex-shrink-0">
+                      <img 
+                        src={`http://localhost:8000/images/${neighbor.id}`}
+                        alt={neighbor.image.filename}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.style.display = 'none';
+                          const fallback = document.createElement('div');
+                          fallback.className = 'w-8 h-8 flex items-center justify-center text-lg';
+                          fallback.textContent = '🖼️';
+                          e.target.parentNode.appendChild(fallback);
+                        }}
+                      />
                     </div>
                     <div>
                       <p className="text-sm text-gray-300 truncate max-w-[150px]">

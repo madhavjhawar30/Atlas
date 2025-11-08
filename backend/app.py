@@ -5,7 +5,7 @@ Handles image upload, embedding, projection, and serving the neural map data
 
 from fastapi import FastAPI, UploadFile, File, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from pydantic import BaseModel
 from typing import List, Optional, Dict
 import numpy as np
@@ -412,6 +412,22 @@ async def get_stats():
         "knn_stats": knn_service.get_stats(),
         "embedding_dim": clip_service.embedding_dim
     }
+
+
+@app.get("/images/{image_id}")
+async def get_image(image_id: str):
+    """
+    Serve an image file
+    """
+    if image_id not in image_database:
+        raise HTTPException(status_code=404, detail="Image not found")
+    
+    image_path = Path(image_database[image_id]["path"])
+    
+    if not image_path.exists():
+        raise HTTPException(status_code=404, detail="Image file not found")
+    
+    return FileResponse(image_path, media_type="image/jpeg")
 
 
 if __name__ == "__main__":
