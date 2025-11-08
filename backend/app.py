@@ -16,6 +16,7 @@ from PIL import Image
 import io
 import os
 from dotenv import load_dotenv
+from sklearn.decomposition import PCA
 
 # Import services
 from clip_service import get_clip_service
@@ -36,7 +37,7 @@ app = FastAPI(
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000").split(","),
+    allow_origins=os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:5176").split(","),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -127,7 +128,6 @@ async def upload_image(file: UploadFile = File(...)):
         
         # Generate embedding
         embedding = clip_service.embed_image(image)
-        
         # Store in database
         image_database[image_id] = {
             "path": str(image_path),
@@ -172,7 +172,7 @@ async def embed_batch(files: List[UploadFile] = File(...)):
 @app.post("/project")
 async def project_to_3d():
     """
-    Project all embeddings to 3D coordinates using UMAP
+    Project all embeddings to 3D coordinates using PCA (fast!)
     """
     global is_projection_fitted
     
@@ -184,13 +184,24 @@ async def project_to_3d():
         image_ids = list(image_database.keys())
         embeddings = np.array([image_database[img_id]["embedding"] for img_id in image_ids])
         
-        print(f"🗺️  Projecting {len(image_ids)} images to 3D...")
+        print(f"⚡ Projecting {len(image_ids)} images to 3D using PCA (fast!)...")
         
-        # Fit and transform
-        coords = umap_service.fit_transform(embeddings)
+        # Use PCA instead of UMAP (100x faster!)
+        pca = PCA(n_components=3, random_state=42)
+        coords = pca.fit_transform(embeddings)
+        
+        print(f"✅ PCA projection complete: {coords.shape}")
+        print(f"   Explained variance: {pca.explained_variance_ratio_.sum():.2%}")
         
         # Normalize coordinates for better visualization
-        coords_normalized = umap_service.normalize_coords(coords, scale=10.0)
+        # Center at origin
+        coords = coords - coords.mean(axis=0)
+        # Scale to [-10, 10] range
+        max_range = np.abs(coords).max()
+        if max_range > 0:
+            coords_normalized = (coords / max_range) * 10
+        else:
+            coords_normalized = coords
         
         # Store coordinates
         for i, image_id in enumerate(image_ids):
@@ -200,9 +211,9 @@ async def project_to_3d():
         
         # Save coordinates to JSON
         coords_data = {
-            "projection": "umap-3d-cosine",
+            "projection": "pca-3d",
             "points": [
-                {"id": img_id, "x": coords_normalized[i][0], "y": coords_normalized[i][1], "z": coords_normalized[i][2]}
+                {"id": img_id, "x": float(coords_normalized[i][0]), "y": float(coords_normalized[i][1]), "z": float(coords_normalized[i][2])}
                 for i, img_id in enumerate(image_ids)
             ]
         }
@@ -216,6 +227,8 @@ async def project_to_3d():
         return {
             "status": "success",
             "num_images": len(image_ids),
+            "method": "PCA",
+            "explained_variance": float(pca.explained_variance_ratio_.sum()),
             "coords_file": str(coords_path)
         }
         
