@@ -45,10 +45,14 @@ export default function AutoPlayButton() {
   // Play audio for a node
   const playAudioForNode = async (nodeId) => {
     const image = getImageById(nodeId)
-    if (!image) return false
+    if (!image) {
+      console.error('Auto-play: Image not found for node', nodeId)
+      return false
+    }
     
     // Get audio URL
     const audioUrl = getNarrationUrl(nodeId)
+    console.log('Auto-play: Fetching audio from', audioUrl)
     
     try {
       // Stop any currently playing audio
@@ -60,14 +64,20 @@ export default function AutoPlayButton() {
       // Fetch audio with auth token
       const { data: { session } } = await supabase.auth.getSession()
       
+      if (!session) {
+        console.error('Auto-play: No session found, cannot fetch audio')
+        return false
+      }
+      
       const response = await fetch(audioUrl, {
         headers: {
-          'Authorization': `Bearer ${session?.access_token || ''}`
+          'Authorization': `Bearer ${session.access_token}`
         }
       })
       
       if (!response.ok) {
-        console.warn(`Failed to fetch audio for ${nodeId}: ${response.status}`)
+        const errorText = await response.text().catch(() => 'Unknown error')
+        console.error(`Auto-play: Failed to fetch audio for ${nodeId}: ${response.status} - ${errorText}`)
         return false
       }
       
