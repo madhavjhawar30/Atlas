@@ -174,7 +174,6 @@ export default function NodeDetailPanel() {
           // If response isn't JSON, use status text
           errorMessage = response.statusText || errorMessage
         }
-        console.error('Narration error:', errorMessage, 'URL:', audioUrl)
         throw new Error(errorMessage)
       }
       
