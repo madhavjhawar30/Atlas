@@ -7,7 +7,7 @@ export default defineConfig({
   // Set base path for GitHub Pages (replace YOUR_REPO_NAME with your actual repo name)
   // If your repo is at https://username.github.io/repo-name/, set base to '/repo-name/'
   // If your repo is at https://username.github.io/ (user/organization page), set base to '/'
-  base: process.env.NODE_ENV === 'production' ? '/HackUMassXIII/' : '/',
+  base: process.env.NODE_ENV === 'production' ? '/Atlas/' : '/',
   server: {
     port: 5173,
     proxy: {
