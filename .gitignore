@@ -50,3 +50,6 @@ uploads/
 models/
 *.pkl
 
+# Node.js / npm
+node_modules/
+**/node_modules/
