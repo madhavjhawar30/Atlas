@@ -54,6 +54,9 @@ server {
     listen 80;
     server_name api.goatlas.tech;
 
+    # Increase upload size limit for image uploads (default is 1MB, set to 100MB)
+    client_max_body_size 100M;
+
     location / {
         proxy_pass http://localhost:8001;
         proxy_http_version 1.1;
@@ -64,6 +67,11 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_cache_bypass $http_upgrade;
+        
+        # Increase timeouts for large file uploads
+        proxy_read_timeout 300s;
+        proxy_connect_timeout 300s;
+        proxy_send_timeout 300s;
     }
 }
 ```

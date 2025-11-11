@@ -56,12 +56,20 @@ Then access it at `http://localhost:5173` (not HTTPS)
        listen 80;
        server_name api.goatlas.tech;
        
+       # Increase upload size limit for image uploads (default is 1MB)
+       client_max_body_size 100M;
+       
        location / {
            proxy_pass http://localhost:8001;
            proxy_set_header Host $host;
            proxy_set_header X-Real-IP $remote_addr;
            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
            proxy_set_header X-Forwarded-Proto $scheme;
+           
+           # Increase timeouts for large file uploads
+           proxy_read_timeout 300s;
+           proxy_connect_timeout 300s;
+           proxy_send_timeout 300s;
        }
    }
    ```
