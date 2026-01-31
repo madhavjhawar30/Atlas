@@ -39,8 +39,6 @@ function App() {
         return () => subscription.unsubscribe()
       } catch (error) {
         console.error('Auth initialization error:', error)
-        // Ensure we still initialize even if auth fails
-        setIsInitialized(true)
       }
     }
     
@@ -54,45 +52,22 @@ function App() {
       return
     }
     
-    // Set a timeout to ensure we always initialize, even if API calls fail
-    const timeoutId = setTimeout(() => {
-      console.warn('Initialization timeout - showing landing page')
-      setIsInitialized(true)
-      setShowLanding(true)
-    }, 10000) // 10 second timeout
-    
     // Initialize app
     const init = async () => {
       try {
         // Check backend health to see if user has images
-        let health
-        try {
-          health = await healthCheck()
-          console.log('Backend status:', health)
-          
-          // Log debug info if available
-          if (health.debug) {
-            console.log('Debug info from backend:', health.debug)
-          }
-        } catch (healthError) {
-          console.error('Health check failed:', healthError)
-          // Continue anyway - might be CORS or SSL issue
+        const health = await healthCheck()
+        console.log('Backend status:', health)
+        
+        // Log debug info if available
+        if (health.debug) {
+          console.log('Debug info from backend:', health.debug)
         }
         
         // Always try to load data, regardless of count (count might be wrong)
-        let data
-        try {
-          data = await exportData()
-          console.log('Export data:', data)
-          console.log('Number of points:', data.coords?.points?.length || 0)
-        } catch (exportError) {
-          console.error('Error exporting data:', exportError)
-          // If export fails, show landing page
-          setShowLanding(true)
-          setIsInitialized(true)
-          clearTimeout(timeoutId)
-          return
-        }
+        const data = await exportData()
+        console.log('Export data:', data)
+        console.log('Number of points:', data.coords?.points?.length || 0)
         
         // If we have images, load them
         if (data.coords && data.coords.points && data.coords.points.length > 0) {
@@ -131,19 +106,15 @@ function App() {
         }
         
         setIsInitialized(true)
-        clearTimeout(timeoutId)
       } catch (error) {
         console.error('Initialization error:', error)
         // If there's an error, show landing page
         setShowLanding(true)
         setIsInitialized(true)
-        clearTimeout(timeoutId)
       }
     }
     
     init()
-    
-    return () => clearTimeout(timeoutId)
   }, [setImages, setEdges, isAuthenticated])
 
   if (!isInitialized) {
