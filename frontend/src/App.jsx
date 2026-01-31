@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import Scene3D from './components/Scene3D'
-import UploadPanel from './components/UploadPanel'
 import StatsPanel from './components/StatsPanel'
 import NodeDetailPanel from './components/NodeDetailPanel'
 import LoadingOverlay from './components/LoadingOverlay'
