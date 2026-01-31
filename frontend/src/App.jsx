@@ -39,6 +39,8 @@ function App() {
         return () => subscription.unsubscribe()
       } catch (error) {
         console.error('Auth initialization error:', error)
+        // Ensure we still initialize even if auth fails
+        setIsInitialized(true)
       }
     }
     
@@ -46,9 +48,19 @@ function App() {
   }, [setUser, setSession])
 
   useEffect(() => {
+    // Set a timeout to ensure we always initialize, even if API calls fail
+    const timeoutId = setTimeout(() => {
+      if (!isInitialized) {
+        console.warn('Initialization timeout - showing landing page')
+        setIsInitialized(true)
+        setShowLanding(true)
+      }
+    }, 10000) // 10 second timeout
+    
     // Only initialize if authenticated
     if (!isAuthenticated) {
       setIsInitialized(true)
+      clearTimeout(timeoutId)
       return
     }
     
@@ -56,12 +68,18 @@ function App() {
     const init = async () => {
       try {
         // Check backend health to see if user has images
-        const health = await healthCheck()
-        console.log('Backend status:', health)
-        
-        // Log debug info if available
-        if (health.debug) {
-          console.log('Debug info from backend:', health.debug)
+        let health
+        try {
+          health = await healthCheck()
+          console.log('Backend status:', health)
+          
+          // Log debug info if available
+          if (health.debug) {
+            console.log('Debug info from backend:', health.debug)
+          }
+        } catch (healthError) {
+          console.error('Health check failed:', healthError)
+          // Continue anyway - might be CORS or SSL issue
         }
         
         // Always try to load data, regardless of count (count might be wrong)
@@ -75,6 +93,7 @@ function App() {
           // If export fails, show landing page
           setShowLanding(true)
           setIsInitialized(true)
+          clearTimeout(timeoutId)
           return
         }
         
@@ -115,16 +134,20 @@ function App() {
         }
         
         setIsInitialized(true)
+        clearTimeout(timeoutId)
       } catch (error) {
         console.error('Initialization error:', error)
-        // If there's an error, show landing page to allow upload
+        // If there's an error, show landing page
         setShowLanding(true)
         setIsInitialized(true)
+        clearTimeout(timeoutId)
       }
     }
     
     init()
-  }, [setImages, setEdges, isAuthenticated])
+    
+    return () => clearTimeout(timeoutId)
+  }, [setImages, setEdges, isAuthenticated, isInitialized])
 
   if (!isInitialized) {
     return (
