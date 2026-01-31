@@ -48,21 +48,18 @@ function App() {
   }, [setUser, setSession])
 
   useEffect(() => {
-    // Set a timeout to ensure we always initialize, even if API calls fail
-    const timeoutId = setTimeout(() => {
-      if (!isInitialized) {
-        console.warn('Initialization timeout - showing landing page')
-        setIsInitialized(true)
-        setShowLanding(true)
-      }
-    }, 10000) // 10 second timeout
-    
     // Only initialize if authenticated
     if (!isAuthenticated) {
       setIsInitialized(true)
-      clearTimeout(timeoutId)
       return
     }
+    
+    // Set a timeout to ensure we always initialize, even if API calls fail
+    const timeoutId = setTimeout(() => {
+      console.warn('Initialization timeout - showing landing page')
+      setIsInitialized(true)
+      setShowLanding(true)
+    }, 10000) // 10 second timeout
     
     // Initialize app
     const init = async () => {
@@ -147,7 +144,7 @@ function App() {
     init()
     
     return () => clearTimeout(timeoutId)
-  }, [setImages, setEdges, isAuthenticated, isInitialized])
+  }, [setImages, setEdges, isAuthenticated])
 
   if (!isInitialized) {
     return (
