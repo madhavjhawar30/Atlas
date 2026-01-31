@@ -7,7 +7,7 @@ import LoadingOverlay from './components/LoadingOverlay'
 import LandingPage from './components/LandingPage'
 import AutoPlayButton from './components/AutoPlayButton'
 import { useStore } from './store'
-import { exportData, healthCheck, recomputeClusters } from './api'
+import { exportData, healthCheck } from './api'
 import { supabase } from './lib/supabase'
 
 function App() {
@@ -81,50 +81,6 @@ function App() {
         // If we have images, load them
         if (data.coords && data.coords.points && data.coords.points.length > 0) {
           console.log(`Loading ${data.coords.points.length} images from export data`)
-          
-          // Check if clustering is needed
-          const hasClusters = data.coords.points.some(point => {
-            const cluster = data.meta?.[point.id]?.cluster
-            return cluster !== undefined && cluster !== null && cluster !== 0
-          })
-          
-          // If no clusters found and we have enough images, try to recompute them
-          if (!hasClusters && data.coords.points.length > 1) {
-            console.log('No clusters found, recomputing...')
-            try {
-              await recomputeClusters()
-              // Reload data after clustering
-              const newData = await exportData()
-              if (newData.coords && newData.coords.points) {
-                const images = newData.coords.points.map(point => ({
-                  id: point.id,
-                  coords: [point.x, point.y, point.z],
-                  thumb: newData.meta?.[point.id]?.thumb || null,
-                  filename: newData.meta?.[point.id]?.filename || 'Unknown',
-                  labels: newData.meta?.[point.id]?.labels || [],
-                  cluster: newData.meta?.[point.id]?.cluster || 0,
-                  description: newData.meta?.[point.id]?.description || null
-                }))
-                setImages(images)
-                
-                if (newData.graph && newData.graph.edges) {
-                  setEdges(newData.graph.edges)
-                }
-                
-                // If we have at least 3 images, skip landing page
-                if (images.length >= 3) {
-                  setShowLanding(false)
-                } else {
-                  setShowLanding(true)
-                }
-                setIsInitialized(true)
-                return
-              }
-            } catch (error) {
-              console.error('Error recomputing clusters:', error)
-              // Continue with existing data
-            }
-          }
           
           // Transform data for frontend
           const images = data.coords.points.map(point => ({
