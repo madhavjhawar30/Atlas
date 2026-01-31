@@ -24,6 +24,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "https://goatlas.tech",
+        "https://api.goatlas.tech",  # Backend custom domain
         "http://localhost:5173",  # Local development
         "http://localhost:3000",  # Alternative local port
     ],
@@ -760,17 +761,27 @@ if __name__ == "__main__":
     import sys
     import os
     
-    # On Windows, disable reload to avoid multiprocessing issues
-    # You can manually restart the server when code changes
-    use_reload = sys.platform != "win32"
-    
     # Get PORT from environment, handle empty string case
     port_str = os.getenv("PORT", "8001")
     port = int(port_str) if port_str and port_str.strip() else 8001
     
-    uvicorn.run(
-        app,  # Pass app directly instead of string to avoid import issues
-        host="0.0.0.0",
-        port=port,
-        reload=use_reload
-    )
+    # Disable reload in production (Render) - reload requires app as string
+    # Check if we're in production (Render sets PORT automatically)
+    is_production = os.getenv("RENDER") is not None or os.getenv("PORT") is not None
+    
+    if is_production:
+        # In production, use import string to avoid reload issues
+        uvicorn.run(
+            "app:app",  # Use string for production
+            host="0.0.0.0",
+            port=port,
+            reload=False
+        )
+    else:
+        # In development, pass app directly
+        uvicorn.run(
+            app,  # Pass app directly for development
+            host="0.0.0.0",
+            port=port,
+            reload=sys.platform != "win32"  # Only reload on non-Windows
+        )
