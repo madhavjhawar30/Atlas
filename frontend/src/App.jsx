@@ -165,11 +165,6 @@ function App() {
         <StatsPanel />
       </div>
       
-      {/* Left Sidebar - Upload & Controls */}
-      <div className="absolute top-24 left-6 z-10 space-y-4 w-80 max-h-[calc(100vh-8rem)] overflow-y-auto pr-2">
-        <UploadPanel />
-      </div>
-      
       {/* Right Sidebar - Node Details */}
       <NodeDetailPanel />
       

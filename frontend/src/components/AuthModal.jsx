@@ -57,7 +57,7 @@ export default function AuthModal({ onAuthSuccess }) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-950 via-blue-900 to-slate-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-950 via-blue-900 to-slate-900 flex items-center justify-center p-4 relative">
       <div className="bg-neural-card/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-700 p-8 w-full max-w-md">
         <div className="text-center mb-8">
           <div className="text-5xl mb-4">🧭</div>
@@ -122,6 +122,15 @@ export default function AuthModal({ onAuthSuccess }) {
           >
             {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
           </button>
+        </div>
+      </div>
+      
+      {/* Info note in bottom right */}
+      <div className="absolute bottom-4 right-4 max-w-xs">
+        <div className="bg-slate-800/80 backdrop-blur-sm border border-gray-600 rounded-lg p-3 text-xs text-gray-400">
+          <p className="leading-relaxed">
+            Currently, only viewing the demo account is supported. New accounts/uploads will not work to reduce server costs.
+          </p>
         </div>
       </div>
     </div>
